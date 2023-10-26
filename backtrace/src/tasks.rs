@@ -37,7 +37,7 @@ pub fn tasks() -> impl Iterator<Item = impl Deref<Target = Task>> {
 
 impl Task {
     /// The location of this task.
-    pub fn location(&self) -> crate::Location {
+    pub fn location(&self) -> &crate::Location {
         // safety: we promise to not inspect the subframes without first locking
         let frame = unsafe { self.0.as_ref() };
         frame.location()

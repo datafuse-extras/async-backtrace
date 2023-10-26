@@ -190,13 +190,13 @@ impl Frame {
     pub fn backtrace_locations(&self) -> Box<[Location]> {
         let len = self.backtrace().count();
         let mut vec = Vec::with_capacity(len);
-        vec.extend(self.backtrace().map(Frame::location));
+        vec.extend(self.backtrace().map(Frame::location).cloned());
         vec.into_boxed_slice()
     }
 
     /// Produces the [`Location`] associated with this frame.
-    pub fn location(&self) -> Location {
-        self.location
+    pub fn location(&self) -> &Location {
+        &self.location
     }
 
     /// Produces `true` if this `Frame` is uninitialized, otherwise false.

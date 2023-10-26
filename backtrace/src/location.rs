@@ -34,20 +34,74 @@ macro_rules! location {
                     .unwrap()
             }};
         }
-        $crate::Location::from_components(fn_name!(), &(file!(), line!(), column!()))
+
+        $crate::Location::from_generated(fn_name!(), &(file!(), line!(), column!()))
     }};
+    ($custom_name:expr) => {{
+        $crate::Location::from_custom($custom_name, &(file!(), line!(), column!()))
+    }};
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+pub struct CustomLocation {
+    name: Option<String>,
+    rest: &'static (&'static str, u32, u32),
+}
+
+impl CustomLocation {
+    pub fn name(&self) -> Option<&str> {
+        match &self.name {
+            None => None,
+            Some(name) => Some(name.as_str()),
+        }
+    }
+
+    pub const fn file(&self) -> &str {
+        self.rest.0
+    }
+
+    pub const fn line(&self) -> u32 {
+        self.rest.1
+    }
+
+    pub const fn column(&self) -> u32 {
+        self.rest.2
+    }
 }
 
 /// A source code location in a function body.
 ///
 /// To construct a `Location`, use [`location!()`].
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
-pub struct Location {
-    /// The name of the surrounding function.
+pub struct GeneratedLocation {
     name: Option<&'static str>,
     /// The file name, line number, and column number on which the surrounding
     /// function is defined.
     rest: &'static (&'static str, u32, u32),
+}
+
+impl GeneratedLocation {
+    pub const fn name(&self) -> Option<&str> {
+        self.name
+    }
+
+    pub const fn file(&self) -> &str {
+        self.rest.0
+    }
+
+    pub const fn line(&self) -> u32 {
+        self.rest.1
+    }
+
+    pub const fn column(&self) -> u32 {
+        self.rest.2
+    }
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+pub enum Location {
+    Custom(CustomLocation),
+    Generated(GeneratedLocation),
 }
 
 impl Location {
@@ -55,14 +109,21 @@ impl Location {
     /// non-breaking releases.
     #[doc(hidden)]
     #[inline(always)]
-    pub const fn from_components(
+    pub const fn from_generated(
         name: &'static str,
         rest: &'static (&'static str, u32, u32),
     ) -> Self {
-        Self {
+        Self::Generated(GeneratedLocation {
             name: Some(name),
             rest,
-        }
+        })
+    }
+
+    pub fn from_custom(name: String, rest: &'static (&'static str, u32, u32)) -> Self {
+        Self::Custom(CustomLocation {
+            name: Some(name),
+            rest,
+        })
     }
 
     /// Include the given future in taskdumps with this location.
@@ -86,23 +147,35 @@ impl Location {
     }
 
     /// Produces the function name associated with this location.
-    pub const fn name(&self) -> Option<&str> {
-        self.name
+    pub fn name(&self) -> Option<&str> {
+        match self {
+            Location::Custom(v) => v.name(),
+            Location::Generated(v) => v.name(),
+        }
     }
 
     /// Produces the file name associated with this location.
     pub const fn file(&self) -> &str {
-        self.rest.0
+        match self {
+            Location::Custom(v) => v.file(),
+            Location::Generated(v) => v.file(),
+        }
     }
 
     /// Produces the line number associated with this location.
     pub const fn line(&self) -> u32 {
-        self.rest.1
+        match self {
+            Location::Custom(v) => v.line(),
+            Location::Generated(v) => v.line(),
+        }
     }
 
     /// Produces the column number associated with this location.
     pub const fn column(&self) -> u32 {
-        self.rest.2
+        match self {
+            Location::Custom(v) => v.column(),
+            Location::Generated(v) => v.column(),
+        }
     }
 }
 
