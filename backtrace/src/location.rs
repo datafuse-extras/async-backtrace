@@ -40,6 +40,9 @@ macro_rules! location {
     ($custom_name:expr) => {{
         $crate::Location::from_custom($custom_name, &(file!(), line!(), column!()))
     }};
+    ($custom_name:expr, $file:expr, $line:expr, $column:expr) => {{
+        $crate::Location::from_custom($custom_name, &($file, $line, $column))
+    }};
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
