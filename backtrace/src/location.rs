@@ -38,17 +38,17 @@ macro_rules! location {
         $crate::Location::from_generated(fn_name!(), &(file!(), line!(), column!()))
     }};
     ($custom_name:expr) => {{
-        $crate::Location::from_custom($custom_name, &(file!(), line!(), column!()))
+        $crate::Location::from_custom($custom_name, (file!(), line!(), column!()))
     }};
     ($custom_name:expr, $file:expr, $line:expr, $column:expr) => {{
-        $crate::Location::from_custom($custom_name, &($file, $line, $column))
+        $crate::Location::from_custom($custom_name, ($file, $line, $column))
     }};
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct CustomLocation {
     name: Option<String>,
-    rest: &'static (&'static str, u32, u32),
+    rest: (&'static str, u32, u32),
 }
 
 impl CustomLocation {
@@ -122,7 +122,7 @@ impl Location {
         })
     }
 
-    pub fn from_custom(name: String, rest: &'static (&'static str, u32, u32)) -> Self {
+    pub fn from_custom(name: String, rest: (&'static str, u32, u32)) -> Self {
         Self::Custom(CustomLocation {
             name: Some(name),
             rest,
